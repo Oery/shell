@@ -39,7 +39,7 @@ RowLayout {
 
                 StyledText {
                     id: stext
-                    text: item.title ? item.title : "Vesktop"
+                    text: "| " + (item.title ? item.title : "Vesktop")
                     font.underline: delegate.containsMouse
                 }
 
@@ -67,7 +67,7 @@ RowLayout {
         onClicked: tray.visible = !tray.visible
 
         contentItem: StyledText {
-            text: tray.visible ? ">" : "<"
+            text: tray.visible ? ">" : " "
         }
     }
 

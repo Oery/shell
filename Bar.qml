@@ -13,9 +13,9 @@ Scope {
             required property var modelData
 
             screen: modelData
-            implicitHeight: 20
+            implicitHeight: 28
             // color: '#E5121517'
-            color: '#E5080808'
+            color: 'transparent'
 
             anchors {
                 top: true
@@ -23,23 +23,43 @@ Scope {
                 right: true
             }
 
-            RowLayout {
+            margins {
+                // top: 5
+                // left: 5
+                // right: 5
+            }
+
+            Rectangle {
+                // radius: 4
+
+                color: '#d8080808'
+
                 anchors.fill: parent
-                anchors.leftMargin: 5
-                anchors.rightMargin: 5
-                spacing: 10
 
-                // OS Logo
-                StyledText { text: '󰣇' }
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 10
+                    spacing: 10
+                    // spacing: 15
 
-                // Workspaces {}
-                WorkspacesNum {}
+                    // OS Logo
+                    // StyledText { text: '󰣇 |' }
+                    // StyledText { text: '₍^. .^₎⟆ | ' }
+                    // StyledText { text: 'λ |' }
+                    StyledText { text: '󰜂 |' }
 
-                Item { Layout.fillWidth: true }
+                    // Workspaces {}
+                    WorkspacesNum {}
 
-                SystemTray {}
+                    WindowTitle {}
 
-                StyledText { text: Time.time }
+                    Item { Layout.fillWidth: true }
+
+                    SystemTray {}
+
+                    StyledText { text: Time.time }
+                }
             }
         }
     }

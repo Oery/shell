@@ -6,7 +6,8 @@ Singleton {
     id: root
 
     readonly property string time: {
-        Qt.formatDateTime(clock.date, "ddd MMM d hh:mm");
+        let s = clock.date.toLocaleString(Qt.locale("en_EN"), "dddd MMMM dd | HH:mm");
+        return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
     SystemClock {
