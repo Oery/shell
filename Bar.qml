@@ -5,6 +5,17 @@ import Quickshell.Hyprland
 
 Scope {
     id: root
+    
+    property alias sidePanelVisible: sidePanel.isVisible
+
+    SidePanel {
+        id: sidePanel
+        tailscale: tailscale
+    }
+
+    Tailscale {
+    id: tailscale
+}
 
     Variants {
         model: Quickshell.screens

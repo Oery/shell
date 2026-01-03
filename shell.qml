@@ -5,5 +5,6 @@ import Quickshell
 
 Scope {
     Bar {}
+    SidePanel {}
     Notifications {}
 }
