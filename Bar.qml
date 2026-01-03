@@ -23,42 +23,70 @@ Scope {
                 right: true
             }
 
-            margins {
-                // top: 5
-                // left: 5
-                // right: 5
-            }
-
             Rectangle {
                 // radius: 4
 
-                color: '#d8080808'
+                // color: '#d8080808'
+                color: '#f2080808'
 
                 anchors.fill: parent
 
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                    spacing: 10
-                    // spacing: 15
+                    anchors.rightMargin: 5
 
                     // OS Logo
                     // StyledText { text: '󰣇 |' }
                     // StyledText { text: '₍^. .^₎⟆ | ' }
                     // StyledText { text: 'λ |' }
-                    StyledText { text: '󰜂 |' }
+                    RowLayout {
+                        // spacing: 6
 
-                    // Workspaces {}
-                    WorkspacesNum {}
+                        Rectangle {
+                            width: 24
+                            height: 20
+                            color: "transparent"
+                            radius: 4
+                            
+                            Text {
+                                anchors.centerIn: parent
+                                text: sidePanel.isVisible ? '󰅰' : '󰅀'
+                                color: '#F7F1FF'
+                                font.family: "JetBrains Mono"
+                                font.pixelSize: 11
+                            }
+                            
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                
+                                onEntered: parent.color = '#20FFFFFF'
+                                onExited: parent.color = "transparent"
+                                onPressed: parent.color = '#40FFFFFF'
+                                onReleased: parent.color = containsMouse ? '#20FFFFFF' : "transparent"
+                                onClicked: sidePanel.toggle()
+                            }
+                        }
 
-                    WindowTitle {}
+                        StyledText { text: '󰜂 |' }
+
+                        WorkspacesNum {}
+
+                        WindowTitle {}
+                    }
 
                     Item { Layout.fillWidth: true }
 
-                    SystemTray {}
+                    RowLayout {
+                        spacing: 0
 
-                    StyledText { text: Time.time }
+                        Battery {}
+
+                        StyledText { text: Time.time }
+
+                        SystemTray {}
+                    }
                 }
             }
         }

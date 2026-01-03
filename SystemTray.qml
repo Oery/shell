@@ -6,77 +6,122 @@ import Quickshell.Widgets
 import Quickshell.Services.SystemTray
 
 RowLayout {
-    RowLayout {
-        id: tray
-
-        visible: false
+    id: root
+    
+    Row {
 
         Repeater {
             model: SystemTray.items
-
-            MouseArea {
-                id: delegate
-
-                required property SystemTrayItem modelData
-                property alias item: delegate.modelData
-
-                Layout.fillHeight: true
-                implicitWidth: stext.implicitWidth
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                hoverEnabled: true
+            
+            Rectangle {
+                id: itemContainer
                 
-                propagateComposedEvents: true
-
-                onClicked: event => {
-                    if (event.button == Qt.LeftButton) {
-                        item.activate();
-                    } else if (event.button == Qt.MiddleButton) {
-                        item.secondaryActivate();
-                    } else if (event.button == Qt.RightButton) {
-                        menuAnchor.open();
+                required property var modelData
+                property var item: modelData
+                
+                width: 24
+                height: 24
+                color: "transparent"
+                radius: 4
+                
+                Behavior on color {
+                    ColorAnimation { duration: 100 }
+                }
+                
+                Image {
+                    id: directIcon
+                    anchors.centerIn: parent
+                    source: item.icon || ""
+                    sourceSize.width: 16
+                    sourceSize.height: 16
+                    smooth: true
+                    asynchronous: true
+                    visible: status === Image.Ready && source.toString() !== ""
+                }
+                
+                Text {
+                    anchors.centerIn: parent
+                    visible: !directIcon.visible
+                    text: item.tooltipTitle[0]
+                    color: '#F7F1FF'
+                    font.family: "JetBrains Mono"
+                    font.pixelSize: 11
+                    font.bold: true
+                }
+                
+                MouseArea {
+                    id: itemMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                    
+                    onEntered: {
+                        parent.color = '#20FFFFFF';
+                        const tooltipText = item.title || item.id || "Unknown";
+                        tooltipPopup.show(tooltipText, itemContainer);
+                    }
+                    
+                    onExited: {
+                        parent.color = "transparent";
+                        tooltipPopup.close();
+                    }
+                    
+                    onClicked: event => {
+                        if (event.button == Qt.LeftButton) {
+                            item.activate();
+                        } else if (event.button == Qt.MiddleButton) {
+                            item.secondaryActivate();
+                        } else if (event.button == Qt.RightButton) {
+                            menuAnchor.open();
+                        }
+                    }
+                    
+                    QsMenuAnchor {
+                        id: menuAnchor
+                        menu: item.menu
+                        anchor.window: itemContainer.QsWindow.window
+                        anchor.adjustment: PopupAdjustment.Flip
+                        anchor.onAnchoring: {
+                            const window = itemContainer.QsWindow.window;
+                            const widgetRect = window.contentItem.mapFromItem(itemContainer, 0, itemContainer.height, itemContainer.width, itemContainer.height);
+                            menuAnchor.anchor.rect = widgetRect;
+                        }
                     }
                 }
-
-                StyledText {
-                    id: stext
-                    text: "| " + (item.title ? item.title : "Vesktop")
-                    font.underline: delegate.containsMouse
-                }
-
-                QsMenuAnchor {
-                    id: menuAnchor
-
-                    menu: item.menu
-                    anchor.window: delegate.QsWindow.window
-                    anchor.adjustment: PopupAdjustment.Flip
-                    anchor.onAnchoring: {
-                        const window = delegate.QsWindow.window;
-                        const widgetRect = window.contentItem.mapFromItem(delegate, 0, delegate.height, delegate.width, delegate.height);
-                        menuAnchor.anchor.rect = widgetRect;
-                    }
-                }
+                
 
             }
-
-        }
-
-    }
-
-    AbstractButton {
-        id: tray_btn
-        onClicked: tray.visible = !tray.visible
-
-        contentItem: StyledText {
-            text: tray.visible ? ">" : " "
         }
     }
-
-    MouseArea {
-        propagateComposedEvents: true
-
-        anchors.fill: parent
-        hoverEnabled: true
-        onEntered: tray.visible = true
-        onExited: tray.visible = false
-    }
+    
+    // Popup {
+    //     id: tooltipPopup
+    //     visible: false
+    //
+    //     background: Rectangle {
+    //         color: '#d8080808'
+    //         border.color: '#40FFFFFF'
+    //         border.width: 1
+    //         radius: 4
+    //     }
+    //
+    //     contentItem: Text {
+    //         id: tooltipContent
+    //         color: '#F7F1FF'
+    //         font.family: "JetBrains Mono"
+    //         font.pixelSize: 11
+    //     }
+    //
+    //     function show(text, parentItem) {
+    //         tooltipContent.text = text;
+    //
+    //         // Position relative to parent item
+    //         var pos = parentItem.mapToItem(null, 0, parentItem.height);
+    //         x = pos.x + (parentItem.width - width) / 2;
+    //         y = pos.y + 6;
+    //
+    //         open();
+    //     }
+    // }
+    
 }
