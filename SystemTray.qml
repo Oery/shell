@@ -5,29 +5,33 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.SystemTray
 
+// TODO: Context Menu seems to be broken
+
 RowLayout {
     id: root
-    
+
     Row {
 
         Repeater {
             model: SystemTray.items
-            
+
             Rectangle {
                 id: itemContainer
-                
+
                 required property var modelData
                 property var item: modelData
-                
+
                 width: 24
                 height: 24
                 color: "transparent"
                 radius: 4
-                
+
                 Behavior on color {
-                    ColorAnimation { duration: 100 }
+                    ColorAnimation {
+                        duration: 100
+                    }
                 }
-                
+
                 Image {
                     id: directIcon
                     anchors.centerIn: parent
@@ -38,7 +42,7 @@ RowLayout {
                     asynchronous: true
                     visible: status === Image.Ready && source.toString() !== ""
                 }
-                
+
                 Text {
                     anchors.centerIn: parent
                     visible: !directIcon.visible
@@ -48,24 +52,24 @@ RowLayout {
                     font.pixelSize: 11
                     font.bold: true
                 }
-                
+
                 MouseArea {
                     id: itemMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                    
+
                     onEntered: {
                         parent.color = '#20FFFFFF';
                         const tooltipText = item.title || item.id || "Unknown";
                         tooltipPopup.show(tooltipText, itemContainer);
                     }
-                    
+
                     onExited: {
                         parent.color = "transparent";
                         tooltipPopup.close();
                     }
-                    
+
                     onClicked: event => {
                         if (event.button == Qt.LeftButton) {
                             item.activate();
@@ -75,7 +79,7 @@ RowLayout {
                             menuAnchor.open();
                         }
                     }
-                    
+
                     QsMenuAnchor {
                         id: menuAnchor
                         menu: item.menu
@@ -88,12 +92,10 @@ RowLayout {
                         }
                     }
                 }
-                
-
             }
         }
     }
-    
+
     // Popup {
     //     id: tooltipPopup
     //     visible: false
@@ -123,5 +125,5 @@ RowLayout {
     //         open();
     //     }
     // }
-    
+
 }

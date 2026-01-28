@@ -1,21 +1,16 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Hyprland
 
 Scope {
     id: root
-    
-    property alias sidePanelVisible: sidePanel.isVisible
 
-    SidePanel {
-        id: sidePanel
-        tailscale: tailscale
-    }
+    // property alias sidePanelVisible: leftpanel.isVisible
 
-    Tailscale {
-    id: tailscale
-}
+    // SidePanel {
+    //     id: leftpanel
+    //     tailscale: tailscale
+    // }
 
     Variants {
         model: Quickshell.screens
@@ -25,7 +20,6 @@ Scope {
 
             screen: modelData
             implicitHeight: 28
-            // color: '#E5121517'
             color: 'transparent'
 
             anchors {
@@ -35,66 +29,75 @@ Scope {
             }
 
             Rectangle {
-                // radius: 4
-
                 // color: '#d8080808'
-                color: '#f2080808'
+                // color: '#f2080808'
+                color: '#CC080808'
 
                 anchors.fill: parent
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: 5
                     anchors.rightMargin: 5
 
                     // OS Logo
                     // StyledText { text: '󰣇 |' }
                     // StyledText { text: '₍^. .^₎⟆ | ' }
                     // StyledText { text: 'λ |' }
+                    // text: "󰜂"
+                    // 󱄅
                     RowLayout {
-                        // spacing: 6
+                        spacing: 0
 
                         Rectangle {
+                            // implicitHeight: content.implicitHeight
+                            // implicitWidth: content.implicitWidth
                             width: 24
                             height: 20
                             color: "transparent"
                             radius: 4
-                            
-                            Text {
+
+                            StyledText {
+                                id: content
                                 anchors.centerIn: parent
-                                text: sidePanel.isVisible ? '󰅰' : '󰅀'
+                                text: '󱄅'
+                                font.pixelSize: 14
                                 color: '#F7F1FF'
-                                font.family: "JetBrains Mono"
-                                font.pixelSize: 11
                             }
-                            
+
                             MouseArea {
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                
+
                                 onEntered: parent.color = '#20FFFFFF'
                                 onExited: parent.color = "transparent"
                                 onPressed: parent.color = '#40FFFFFF'
                                 onReleased: parent.color = containsMouse ? '#20FFFFFF' : "transparent"
-                                onClicked: sidePanel.toggle()
+                                onClicked: SidePanel.toggle()
                             }
                         }
 
-                        StyledText { text: '󰜂 |' }
+                        StyledText {
+                            text: '| '
+                        }
 
-                        WorkspacesNum {}
+                        Workspaces {}
 
                         WindowTitle {}
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     RowLayout {
                         spacing: 0
 
                         Battery {}
 
-                        StyledText { text: Time.time }
+                        StyledText {
+                            text: Time.time
+                        }
 
                         SystemTray {}
                     }

@@ -1,10 +1,16 @@
-//@ pragma UseQApplication
-
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 Scope {
     Bar {}
-    SidePanel {}
     Notifications {}
+
+    IpcHandler {
+        target: "leftpanel"
+
+        function toggle(): void {
+            SidePanel.toggle();
+        }
+    }
 }
