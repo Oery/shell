@@ -1,64 +1,98 @@
 import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import qs.utils
 
-Item {
-    height: 60
+ColumnLayout {
+    id: root
+    Layout.fillWidth: true
+    spacing: 8
 
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 4
-
-        StyledText {
-            text: "Power Profile"
-            font.pixelSize: 12
+    readonly property var profiles: [
+        {
+            value: PowerProfile.PowerSaver,
+            label: "Saver",
+            icon: "󰌪",
+            color: '#4CAF50'
+        },
+        {
+            value: PowerProfile.Balanced,
+            label: "Balanced",
+            icon: "󰓅",
+            color: '#2196F3'
+        },
+        {
+            value: PowerProfile.Performance,
+            label: "Perf",
+            icon: "󱐋",
+            color: '#F44336'
         }
+    ]
 
-        RowLayout {
-            spacing: 8
+    StyledText {
+        text: "Power Profile"
+        font.pixelSize: 12
+        font.bold: true
+        color: '#CFC9D9'
+    }
 
-            Repeater {
-                model: ["power-saver", "balanced", "performance"]
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 6
 
-                delegate: Rectangle {
-                    Layout.minimumWidth: 80
-                    height: 32
-                    radius: 4
-                    color: PowerProfiles.profile === modelData ? getColor(modelData) : '#333333'
-                    border.color: PowerProfiles.profile === modelData ? getColor(modelData) : '#40FFFFFF'
-                    border.width: 1
+        Repeater {
+            model: root.profiles
+
+            delegate: Rectangle {
+                id: seg
+                required property var modelData
+
+                readonly property bool selected: PowerProfiles.profile === modelData.value
+                readonly property bool available: modelData.value !== PowerProfile.Performance || PowerProfiles.hasPerformanceProfile
+
+                Layout.fillWidth: true
+                implicitHeight: 40
+                radius: 10
+                opacity: available ? 1.0 : 0.4
+                color: selected ? modelData.color : (mouse.containsMouse ? '#24FFFFFF' : '#14FFFFFF')
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 130
+                    }
+                }
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 1
 
                     StyledText {
-                        anchors.centerIn: parent
-                        text: getLabel(modelData)
-                        font.pixelSize: 10
+                        Layout.alignment: Qt.AlignHCenter
+                        text: seg.modelData.icon
+                        font.pixelSize: 15
+                        color: seg.selected ? '#FFFFFF' : '#CFC9D9'
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            if (modelData === "performance" && !PowerProfiles.hasPerformanceProfile) {
-                                return;
-                            }
-                            PowerProfiles.profile = modelData;
-                        }
+                    StyledText {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: seg.modelData.label
+                        font.pixelSize: 9
+                        color: seg.selected ? '#FFFFFF' : '#8A8497'
+                    }
+                }
+
+                MouseArea {
+                    id: mouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: seg.available ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    onClicked: {
+                        if (!seg.available)
+                            return;
+                        PowerProfiles.profile = seg.modelData.value;
                     }
                 }
             }
         }
-    }
-
-    function getColor(profile) {
-        if (profile === "power-saver") return '#4CAF50';
-        if (profile === "performance") return '#F44336';
-        return '#2196F3';
-    }
-
-    function getLabel(profile) {
-        if (profile === "power-saver") return "Saver";
-        if (profile === "performance") return "Perf";
-        return "Balanced";
     }
 }

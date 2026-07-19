@@ -10,33 +10,39 @@ import Quickshell.Wayland
 import qs.panels
 import qs.desktop
 import qs.utils
+import qs.services
 
 Scope {
-    NotificationServer {
-        id: notificationServer
-        bodySupported: true
-        keepOnReload: true
-        imageSupported: true
+    // Eagerly instantiate the notification service so its server registers
+    // on DBus at startup (not lazily when the panel first opens).
+    property var _notifications: Notifications
 
-        onNotification: notification => {
-            notification.tracked = true;
-
-            var col = notificationColumn;
-            var item = notificationItem.createObject(col);
-            item.notif = notification;
-
-            notification.closed.connect(() => item.destroy());
+    Connections {
+        target: Notifications
+        function onPopup(notif) {
+            var item = notificationItem.createObject(notificationColumn);
+            item.notif = notif;
         }
     }
 
     Component {
         id: notificationItem
         Rectangle {
+            id: popupRoot
             width: 320
             height: 80
             color: "#E5080808"
             radius: 5
             property var notif: null
+
+            // If the notification is dismissed elsewhere while its popup is
+            // still visible, remove the popup too.
+            Connections {
+                target: popupRoot.notif
+                function onClosed(reason) {
+                    popupRoot.destroy();
+                }
+            }
 
             ColumnLayout {
                 anchors.fill: parent
@@ -60,17 +66,18 @@ Scope {
                 }
             }
 
+            // Auto-hide the popup after a few seconds, but keep the
+            // notification in history (don't dismiss it).
             Timer {
                 running: true
                 repeat: false
                 interval: 5000
-                onTriggered: if (notif)
-                    notif.dismiss()
+                onTriggered: popupRoot.destroy()
             }
             MouseArea {
                 anchors.fill: parent
-                onClicked: if (notif)
-                    notif.dismiss()
+                onClicked: if (popupRoot.notif)
+                    popupRoot.notif.dismiss()
             }
         }
     }
@@ -133,6 +140,20 @@ Scope {
         target: "rightpanel"
         function toggle(): void {
             RightPanel.toggle();
+        }
+    }
+
+    IpcHandler {
+        target: "notifications"
+        function clear(): void {
+            Notifications.clearAll();
+        }
+    }
+
+    IpcHandler {
+        target: "tailscale"
+        function pingall(): void {
+            Tailscale.measureAllLatency();
         }
     }
 

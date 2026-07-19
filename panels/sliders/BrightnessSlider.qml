@@ -1,101 +1,71 @@
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import qs.utils
 
-Item {
+RowLayout {
     id: root
+    Layout.fillWidth: true
+    spacing: 12
 
-    readonly property real brightnessValue: 50
-    height: 80
-    implicitHeight: 80
+    StyledText {
+        text: brightnessSlider.value < 34 ? "󰃞" : (brightnessSlider.value < 67 ? "󰃟" : "󰃠")
+        font.pixelSize: 17
+        color: '#FFC107'
+        Layout.preferredWidth: 20
+        horizontalAlignment: Text.AlignHCenter
+    }
 
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 4
+    StyledSlider {
+        id: brightnessSlider
+        Layout.fillWidth: true
+        from: 1
+        to: 100
+        value: 50
+        accent: '#FFC107'
 
-        RowLayout {
-            spacing: 8
+        // Only react to user drags, not to the initial hardware read.
+        onMoved: brightnessDebounce.restart()
+    }
 
-            StyledText {
-                text: "Brightness"
-                font.pixelSize: 12
-            }
+    StyledText {
+        text: Math.round(brightnessSlider.value) + "%"
+        font.pixelSize: 11
+        color: '#AAAAAA'
+        Layout.preferredWidth: 32
+        horizontalAlignment: Text.AlignRight
+    }
 
-            Item {
-                Layout.fillWidth: true
-            }
+    Timer {
+        id: brightnessDebounce
+        interval: 60
+        onTriggered: setBrightness.running = true
+    }
 
-            StyledText {
-                id: brightnessValueText
-                text: Math.round(brightnessSlider.value) + "%"
-                font.pixelSize: 11
-                color: '#AAAAAA'
-            }
-        }
+    Process {
+        id: setBrightness
+        command: ["brightnessctl", "s", Math.round(brightnessSlider.value) + "%"]
+        running: false
+    }
 
-        RowLayout {
-            spacing: 8
+    Process {
+        id: brightnessRead
+        command: ["sh", "-c", "brightnessctl g; brightnessctl m"]
+        running: false
 
-            StyledText {
-                text: "Low"
-                font.pixelSize: 11
-            }
-
-            Slider {
-                id: brightnessSlider
-                Layout.fillWidth: true
-                Layout.preferredHeight: 24
-                from: 1
-                to: 100
-                value: 50
-
-                onValueChanged: {
-                    brightnessValueText.text = Math.round(value) + "%";
-                    brightnessDebounce.restart();
-                }
-            }
-
-            StyledText {
-                text: "High"
-                font.pixelSize: 11
-            }
-        }
-
-        Timer {
-            id: brightnessDebounce
-            interval: 100
-            onTriggered: setBrightness.running = true
-        }
-
-        Process {
-            id: setBrightness
-            command: ["brightnessctl", "s", Math.round(brightnessSlider.value) + "%"]
-            running: false
-        }
-
-        Component.onCompleted: {
-            brightnessRead.running = true;
-        }
-
-        Process {
-            id: brightnessRead
-            command: ["sh", "-c", "brightnessctl g; brightnessctl m"]
-            running: false
-
-            stdout: StdioCollector {
-                onStreamFinished: {
-                    var lines = this.text.trim().split('\n');
-                    if (lines.length >= 2) {
-                        var current = parseInt(lines[0]) || 0;
-                        var maxVal = parseInt(lines[1]) || 100;
-                        if (maxVal > 0) {
-                            brightnessSlider.value = Math.round((current / maxVal) * 100);
-                        }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var lines = this.text.trim().split('\n');
+                if (lines.length >= 2) {
+                    var current = parseInt(lines[0]) || 0;
+                    var maxVal = parseInt(lines[1]) || 100;
+                    if (maxVal > 0) {
+                        brightnessSlider.value = Math.round((current / maxVal) * 100);
                     }
                 }
             }
         }
     }
+
+    Component.onCompleted: brightnessRead.running = true
 }

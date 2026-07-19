@@ -14,6 +14,13 @@ Singleton {
     property var peers: []
     property bool measuringLatency: false
 
+    readonly property int onlineCount: peers.filter(p => p.online).length
+    readonly property int totalCount: peers.length
+    readonly property string selfName: {
+        const s = peers.find(p => p.self);
+        return s ? s.name : "";
+    }
+
     Process {
         id: statusProcess
         command: ["tailscale", "status", "--json"]
@@ -26,28 +33,43 @@ Singleton {
                     root.isConnected = data.BackendState === "Running";
                     root.status = data.BackendState;
 
+                    data.Peer = data.Peer || {};
                     data.Peer["!self"] = data.Self;
 
                     const oldPeers = root.peers || [];
-                    let newPeers = Object.keys(data.Peer || {}).map(key => {
-                        const peer = data.Peer[key];
+                    let newPeers = Object.keys(data.Peer).map(key => {
+                        const peer = data.Peer[key] || {};
                         const oldPeer = oldPeers.find(p => p.id === key);
+                        const ips = peer.TailscaleIPs || [];
+                        const ipv4 = ips.find(ip => ip.indexOf(".") !== -1) || ips[0] || "";
+                        const isSelf = key === "!self";
                         return {
                             id: key,
-                            name: peer.DNSName.split(".")[0] || key,
-                            dnsName: peer.TailscaleIPs[0] || "",
-                            os: peer.OS || "Unknown",
-                            online: peer.Online || false,
+                            self: isSelf,
+                            name: (peer.DNSName ? peer.DNSName.split(".")[0] : "") || peer.HostName || key,
+                            hostName: peer.HostName || "",
+                            ipv4: ipv4,
+                            os: peer.OS || "unknown",
+                            online: isSelf ? root.isConnected : (peer.Online || false),
+                            exitNode: peer.ExitNode || false,
+                            exitNodeOption: peer.ExitNodeOption || false,
+                            active: peer.Active || false,
+                            curAddr: peer.CurAddr || "",
+                            relay: peer.Relay || "",
+                            lastSeen: peer.LastSeen || "",
+                            rxBytes: peer.RxBytes || 0,
+                            txBytes: peer.TxBytes || 0,
                             latency: oldPeer ? oldPeer.latency : null,
-                            measuringLatency: false,
-                            pingTarget: peer.DNSName ? peer.DNSName.replace(/\.$/, '') : (peer.HostName || peer.TailscaleIPs?.[0] || key)
+                            measuringLatency: oldPeer ? oldPeer.measuringLatency : false,
+                            pingTarget: ipv4
                         };
                     });
 
                     newPeers.sort((a, b) => {
-                        if (a.online !== b.online) {
+                        if (a.self !== b.self)
+                            return a.self ? -1 : 1;
+                        if (a.online !== b.online)
                             return a.online ? -1 : 1;
-                        }
                         return a.name.localeCompare(b.name, undefined, {
                             sensitivity: 'base'
                         });
@@ -63,108 +85,92 @@ Singleton {
         }
     }
 
-    // Process to measure latency
+    // Sequential per-peer latency probe. One ping runs at a time; when it
+    // finishes we advance the queue.
     Process {
-        id: latencyProcess
-        command: ["tailscale", "ping", "--c=1"]
+        id: pingProcess
+        property string peerId: ""
         running: false
 
         stdout: StdioCollector {
             onStreamFinished: {
-                try {
-                    const peerId = latencyProcess.peerId;
-                    const peerIndex = root.peers.findIndex(p => p.id === peerId);
-                    if (peerIndex === -1) {
-                        console.log("Peer not found for ID:", peerId);
-                        return;
-                    }
-
-                    console.log("Ping output for peer", peerId, ":", this.text);
-
-                    const output = this.text;
-
-                    if (output.includes("time=") && output.includes("ms")) {
-                        const timeMatch = output.match(/time=([0-9.]+)\s*ms/);
-                        if (timeMatch && timeMatch[1]) {
-                            root.peers[peerIndex].latency = parseFloat(timeMatch[1]);
-                            root.peers[peerIndex].measuringLatency = false;
-                            console.log("Successfully parsed latency:", parseFloat(timeMatch[1]));
-                        }
-                    } else if (output.includes("is local Tailscale IP")) {
-                        root.peers[peerIndex].latency = 0;
-                        root.peers[peerIndex].measuringLatency = false;
-                    } else if (output.includes("pong from") && output.includes("in ")) {
-                        const timeMatch = output.match(/in\s+([0-9.]+)\s*ms/);
-                        if (timeMatch && timeMatch[1]) {
-                            root.peers[peerIndex].latency = parseFloat(timeMatch[1]);
-                            root.peers[peerIndex].measuringLatency = false;
-                            console.log("Successfully parsed latency:", parseFloat(timeMatch[1]));
-                        }
-                    } else {
-                        root.peers[peerIndex].measuringLatency = false;
-                        root.peers[peerIndex].latency = null;
-                        console.log("Could not parse latency from pong output");
-                    }
-
-                    const newPeers = [...root.peers];
-                    root.peers = newPeers;
-                    root.peersChanged();
-                } catch (e) {
-                    console.log("Error parsing ping output:", e);
-                    const peerId = latencyProcess.peerId;
-                    const peerIndex = root.peers.findIndex(p => p.id === peerId);
-                    if (peerIndex !== -1) {
-                        root.peers[peerIndex].measuringLatency = false;
-                    }
+                const out = this.text;
+                let latency = null;
+                if (out.includes("is local Tailscale IP")) {
+                    latency = 0;
+                } else {
+                    const m = out.match(/in\s+([0-9.]+)\s*ms/) || out.match(/time=([0-9.]+)\s*ms/);
+                    if (m)
+                        latency = parseFloat(m[1]);
                 }
+                root._patchPeer(pingProcess.peerId, {
+                    latency: latency,
+                    measuringLatency: false
+                });
+                root._pingNext();
             }
         }
-
-        property string peerId: ""
     }
 
-    Timer {
-        id: latencyTimer
-        running: false
-        interval: 500
-        onTriggered: measureNextPeer()
+    property var _pingQueue: []
+
+    function _patchPeer(id, patch) {
+        root.peers = root.peers.map(p => p.id === id ? Object.assign({}, p, patch) : p);
     }
 
-    property int latencyMeasureIndex: 0
-    property var onlinePeersToMeasure: []
-
-    function measureNextPeer() {
-        if (latencyMeasureIndex >= onlinePeersToMeasure.length) {
+    function _pingNext() {
+        if (root._pingQueue.length === 0) {
             root.measuringLatency = false;
-            console.log("All measurements completed, resetting global flag");
             return;
         }
-
-        const peer = onlinePeersToMeasure[latencyMeasureIndex];
-        console.log("Measuring latency for peer:", peer.id, peer.name, "target:", peer.pingTarget);
-        measureLatency(peer.id);
-        latencyMeasureIndex++;
-
-        if (latencyMeasureIndex < onlinePeersToMeasure.length) {
-            latencyTimer.restart();
+        const id = root._pingQueue.shift();
+        const peer = root.peers.find(p => p.id === id);
+        if (!peer || !peer.pingTarget) {
+            root._pingNext();
+            return;
         }
+        pingProcess.peerId = id;
+        pingProcess.command = ["tailscale", "ping", "--c=1", "--timeout=3s", peer.pingTarget];
+        pingProcess.running = true;
     }
 
-    function measureLatency(peerId) {
-        root.measuringLatency = true;
-        onlinePeersToMeasure = root.peers.filter(p => p.online);
-        latencyMeasureIndex = 0;
-        measureNextPeer();
+    function pingPeer(id) {
+        if (pingProcess.running)
+            return;
+        const peer = root.peers.find(p => p.id === id);
+        if (!peer || !peer.pingTarget)
+            return;
+        root._patchPeer(id, {
+            measuringLatency: true
+        });
+        root._pingQueue = [id];
+        _pingNext();
     }
 
     function measureAllLatency() {
-        if (!root.measuringLatency) {
-            root.measuringLatency = true;
-            onlinePeersToMeasure = root.peers.filter(p => p.online);
-            latencyMeasureIndex = 0;
-            measureNextPeer();
-            root.measuringLatency = false;
-        }
+        if (root.measuringLatency || pingProcess.running)
+            return;
+        const ids = root.peers.filter(p => p.online && p.pingTarget).map(p => p.id);
+        if (ids.length === 0)
+            return;
+        root.measuringLatency = true;
+        root.peers = root.peers.map(p => ids.indexOf(p.id) !== -1 ? Object.assign({}, p, {
+                measuringLatency: true
+            }) : p);
+        root._pingQueue = ids;
+        _pingNext();
+    }
+
+    Process {
+        id: clipProcess
+        running: false
+    }
+
+    function copyText(text) {
+        if (!text)
+            return;
+        clipProcess.command = ["wl-copy", String(text)];
+        clipProcess.running = true;
     }
 
     Timer {

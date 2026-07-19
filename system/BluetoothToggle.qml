@@ -1,52 +1,18 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell.Io
-import qs.utils
 
-Item {
+ToggleTile {
     id: root
+
     property bool bluetoothEnabled: false
-    height: 32
 
-    RowLayout {
-        anchors.fill: parent
-        spacing: 8
+    icon: bluetoothEnabled ? "󰂯" : "󰂲"
+    label: "Bluetooth"
+    sublabel: bluetoothEnabled ? "On" : "Off"
+    active: bluetoothEnabled
+    accent: '#3F51B5'
 
-        StyledText {
-            text: "Bluetooth"
-            font.pixelSize: 12
-        }
-
-        Item { Layout.fillWidth: true }
-
-        Rectangle {
-            width: 44
-            height: 24
-            radius: 12
-            color: root.bluetoothEnabled ? '#4CAF50' : '#666666'
-
-            Rectangle {
-                width: 20
-                height: 20
-                radius: 10
-                color: 'white'
-                anchors.left: parent.left
-                anchors.leftMargin: root.bluetoothEnabled ? 22 : 2
-                anchors.verticalCenter: parent.verticalCenter
-
-                Behavior on anchors.leftMargin { NumberAnimation { duration: 150 } }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: toggleBluetooth()
-            }
-        }
-    }
-
-    function toggleBluetooth() {
-        bluetoothToggle.running = true;
-    }
+    onToggled: bluetoothToggle.running = true
 
     Timer {
         interval: 3000
@@ -72,7 +38,8 @@ Item {
         command: ["bash", "-c", "if rfkill list bluetooth | grep -q 'Soft blocked: no'; then rfkill block bluetooth; else rfkill unblock bluetooth; fi"]
         running: false
 
-        onRunningChanged: if (!running) bluetoothCheck.running = true
+        onRunningChanged: if (!running)
+            bluetoothCheck.running = true
     }
 
     Component.onCompleted: bluetoothCheck.running = true

@@ -166,11 +166,9 @@ Singleton {
     }
 
     function searchEntries(query) {
-        const allEntries = [...DesktopEntries.applications.values];
+        const allEntries = [...DesktopEntries.applications.values].filter(a => a.name != "uuctl");
         if (!query || !query.trim()) {
-            const sorted = allEntries.slice().sort((a, b) =>
-                a.name.localeCompare(b.name)
-            );
+            const sorted = allEntries.slice().sort((a, b) => a.name.localeCompare(b.name));
             return sorted;
         }
 
@@ -239,9 +237,7 @@ Singleton {
     function searchCommands(query) {
         const allCommands = commands;
         if (!query || !query.trim()) {
-            const sorted = allCommands.slice().sort((a, b) =>
-                a.name.localeCompare(b.name)
-            );
+            const sorted = allCommands.slice().sort((a, b) => a.name.localeCompare(b.name));
             return sorted;
         }
 
