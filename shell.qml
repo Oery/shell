@@ -11,8 +11,11 @@ import qs.panels
 import qs.desktop
 import qs.utils
 import qs.services
+import qs.system
 
 Scope {
+    VolumeOSD {}
+
     // Eagerly instantiate the notification service so its server registers
     // on DBus at startup (not lazily when the panel first opens).
     property var _notifications: Notifications

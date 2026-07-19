@@ -32,10 +32,8 @@ Scope {
             }
 
             Rectangle {
-                // color: '#d8080808'
+                color: '#d8080808' // 85%
                 // color: '#f2080808'
-                color: '#E5080808'
-                // color: 'transparent'
 
                 anchors.fill: parent
 
@@ -45,11 +43,8 @@ Scope {
                     anchors.rightMargin: 5
 
                     // OS Logo
-                    // StyledText { text: '󰣇 |' }
                     // StyledText { text: '₍^. .^₎⟆ | ' }
                     // StyledText { text: 'λ |' }
-                    // text: "󰜂"
-                    // 󱄅
                     RowLayout {
                         spacing: 0
 
@@ -64,7 +59,7 @@ Scope {
                             StyledText {
                                 id: content
                                 anchors.centerIn: parent
-                                text: '󱄅'
+                                text: Distro.logo
                                 font.pixelSize: 14
                                 color: '#F7F1FF'
                             }

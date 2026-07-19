@@ -12,8 +12,16 @@ import qs.utils
 Singleton {
     id: appLauncher
 
+    // Starts visible on purpose: the launcher renders once at startup behind
+    // opacity 0 to warm the icon and entry caches, then hides itself (see the
+    // double callLater below). Setting this to false makes the first real open
+    // slow, since nothing is cached until then.
     property bool isVisible: true
     property var cachedIcons: ({})
+
+    // Monitor the launcher opened on, captured at open time so it doesn't jump
+    // if focus moves elsewhere while it's up.
+    property string activeScreen: ""
 
     property var wallpaperFiles: []
     property string originalWallpaperPath: ""
@@ -26,6 +34,8 @@ Singleton {
     }
 
     function toggle() {
+        if (!isVisible)
+            activeScreen = FocusedScreen.name;
         isVisible = !isVisible;
     }
 
@@ -300,14 +310,16 @@ Singleton {
             required property var modelData
 
             screen: modelData
-            visible: appLauncher.isVisible
+            // Only the focused monitor's instance shows. Otherwise every
+            // monitor gets a copy, and their focus grabs cancel each other out.
+            visible: appLauncher.isVisible && FocusedScreen.matches(modelData, appLauncher.activeScreen)
             focusable: true
             exclusiveZone: 0
             color: 'transparent'
 
             HyprlandFocusGrab {
                 windows: [launcher]
-                active: appLauncher.isVisible
+                active: launcher.visible
                 onCleared: appLauncher.isVisible = false
             }
 
@@ -339,7 +351,8 @@ Singleton {
 
                 opacity: 0
 
-                // Double callLater so that it runs after 1st render
+                // Double callLater so that it runs after 1st render, by which
+                // point the icon and entry caches are warm.
                 Component.onCompleted: {
                     Qt.callLater(() => {
                         Qt.callLater(() => {

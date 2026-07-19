@@ -16,7 +16,13 @@ Singleton {
 
     property bool isVisible: false
 
+    // Monitor this panel opened on, captured at open time so it doesn't jump
+    // if focus moves elsewhere while it's up.
+    property string activeScreen: ""
+
     function toggle() {
+        if (!isVisible)
+            activeScreen = FocusedScreen.name;
         isVisible = !isVisible;
     }
 
@@ -28,7 +34,9 @@ Singleton {
             required property var modelData
 
             screen: modelData
-            visible: rightpanel.isVisible
+            // Only the focused monitor's instance shows. Otherwise every
+            // monitor gets a copy, and their focus grabs cancel each other out.
+            visible: rightpanel.isVisible && FocusedScreen.matches(modelData, rightpanel.activeScreen)
 
             anchors {
                 top: true
@@ -44,7 +52,7 @@ Singleton {
 
             HyprlandFocusGrab {
                 windows: [rightPanel]
-                active: rightpanel.isVisible
+                active: rightPanel.visible
                 onCleared: rightpanel.isVisible = false
             }
 
