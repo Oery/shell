@@ -15,10 +15,26 @@ Scope {
 	Connections {
 		target: Pipewire.defaultAudioSink?.audio
 
-		function onVolumeChanged() {
+		function onVolumesChanged() {
 			root.shouldShowOsd = true;
 			hideTimer.restart();
 		}
+
+		function onMutedChanged() {
+			root.shouldShowOsd = true;
+			hideTimer.restart();
+		}
+	}
+
+	readonly property string volumeIconName: {
+		const audio = Pipewire.defaultAudioSink?.audio;
+		if (!audio || audio.muted || audio.volume <= 0)
+			return "audio-volume-muted-symbolic";
+		if (audio.volume < 0.33)
+			return "audio-volume-low-symbolic";
+		if (audio.volume < 0.66)
+			return "audio-volume-medium-symbolic";
+		return "audio-volume-high-symbolic";
 	}
 
 	property bool shouldShowOsd: false
@@ -64,7 +80,7 @@ Scope {
 
 					IconImage {
 						implicitSize: 30
-						source: Quickshell.iconPath("audio-volume-high-symbolic")
+						source: Quickshell.iconPath(root.volumeIconName)
 					}
 
 					Rectangle {

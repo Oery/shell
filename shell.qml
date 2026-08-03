@@ -1,5 +1,5 @@
 //@ pragma UseQApplication
-//@ pragma IconTheme YAMIS
+//@ pragma IconTheme yet-another-monochrome-icon-set
 
 import QtQuick
 import QtQuick.Layouts
