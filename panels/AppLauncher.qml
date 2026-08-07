@@ -39,6 +39,17 @@ Singleton {
         isVisible = !isVisible;
     }
 
+    function launchEntry(entry) {
+        if (entry.runInTerminal && Config.terminalCommand !== '') {
+            Quickshell.execDetached({
+                command: [Config.terminalCommand, '-e'].concat(entry.command),
+                workingDirectory: entry.workingDirectory
+            });
+        } else {
+            entry.execute();
+        }
+    }
+
     function loadWallpapers() {
         if (wallpaperFiles.length > 0)
             return;
@@ -346,7 +357,8 @@ Singleton {
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 5
-                color: '#E5080808'
+                // color: '#E5080808'
+                color: '#D8080808'
                 radius: 4
 
                 opacity: 0
@@ -472,7 +484,7 @@ Singleton {
                                         Config.wallpaperPath = "file://" + entry.filePath;
                                         appLauncher.isVisible = false;
                                     } else {
-                                        entry.execute();
+                                        appLauncher.launchEntry(entry);
                                         appLauncher.isVisible = false;
                                     }
                                 }
@@ -578,7 +590,7 @@ Singleton {
                                         Config.wallpaperPath = "file://" + modelData.filePath;
                                         appLauncher.isVisible = false;
                                     } else {
-                                        modelData.execute();
+                                        appLauncher.launchEntry(modelData);
                                         appLauncher.isVisible = false;
                                     }
                                 }

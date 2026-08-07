@@ -8,6 +8,8 @@ Singleton {
 
     property string wallpaperPath: ''
 
+    property string terminalCommand: 'alacritty'
+
     property bool wallpaperSelectorVisible: false
     property string originalWallpaperPath: ''
 
@@ -29,7 +31,7 @@ Singleton {
 
     Process {
         id: writeConfig
-        command: ["bash", "-c", "echo '{\"wallpaperPath\":\"" + root.wallpaperPath + "\"}' > /home/oery/.config/quickshell/oery/config.json"]
+        command: ["bash", "-c", "printf '{\"wallpaperPath\":\"%s\",\"terminalCommand\":\"%s\"}' \"" + root.wallpaperPath + "\" \"" + root.terminalCommand + "\" > /home/oery/.config/quickshell/oery/config.json"]
         running: false
     }
 
@@ -45,6 +47,9 @@ Singleton {
                     if (data.wallpaperPath) {
                         root.wallpaperPath = data.wallpaperPath;
                     }
+                    if (data.terminalCommand) {
+                        root.terminalCommand = data.terminalCommand;
+                    }
                 } catch (e) {}
                 root.configLoaded = true;
             }
@@ -56,6 +61,12 @@ Singleton {
     }
 
     onWallpaperPathChanged: {
+        if (configLoaded) {
+            writeTimer.restart();
+        }
+    }
+
+    onTerminalCommandChanged: {
         if (configLoaded) {
             writeTimer.restart();
         }
