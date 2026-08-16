@@ -212,8 +212,8 @@ Singleton {
 
     property var commands: [
         {
-            name: "wallpaper",
-            icon: "file:///home/oery/.local/share/icons/YAMIS/apps/scalable/preferences-desktop-wallpaper.svg",
+            name: "Wallpaper",
+            icon: "preferences-desktop-wallpaper",
             keywords: ["wallpaper", "background", "wall"]
         }
     ]
@@ -475,7 +475,7 @@ Singleton {
                                         return;
 
                                     if (appLauncher.mode === "command") {
-                                        if (entry.name === "wallpaper") {
+                                        if (entry.name === "Wallpaper") {
                                             appLauncher.mode = "wallpaper";
                                             appLauncher.currentSearchText = "";
                                             searchField.text = "";
@@ -581,7 +581,7 @@ Singleton {
 
                                 onClicked: {
                                     if (appLauncher.mode === "command") {
-                                        if (modelData.name === "wallpaper") {
+                                        if (modelData.name === "Wallpaper") {
                                             appLauncher.mode = "wallpaper";
                                             appLauncher.currentSearchText = "";
                                             searchField.text = "";
