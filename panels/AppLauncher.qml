@@ -87,6 +87,37 @@ Singleton {
                         sorted.push(file);
                 }
                 appLauncher.wallpaperFiles = sorted;
+
+                thumbnailProc.command = [
+                    "bash", "-c",
+                    "sourceDir=$1; cacheDir=$2; mkdir -p -- \"$cacheDir\"; "
+                    + "find \"$sourceDir\" -maxdepth 1 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \\) -print0 | "
+                    + "while IFS= read -r -d '' source; do name=${source##*/}; thumbnail=\"$cacheDir/$name.jpg\"; "
+                    + "if [ ! -f \"$thumbnail\" ] || [ \"$source\" -nt \"$thumbnail\" ]; then "
+                    + "temporary=\"$thumbnail.tmp.jpg\"; magick \"$source[0]\" -auto-orient -thumbnail '96x54^' -gravity center -extent 96x54 -strip -quality 82 \"$temporary\" && mv -f -- \"$temporary\" \"$thumbnail\"; "
+                    + "fi; [ -f \"$thumbnail\" ] && printf '%s\\n' \"$name\"; done",
+                    "wallpaper-thumbnail-cache",
+                    "/home/oery/Pictures/Wallpapers",
+                    Quickshell.cachePath("wallpaper-thumbnails")
+                ];
+                thumbnailProc.running = true;
+            }
+        }
+    }
+
+    Process {
+        id: thumbnailProc
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const cachedNames = new Set(this.text.trim().split('\n').filter(name => name.length > 0));
+                const cacheDir = Quickshell.cachePath("wallpaper-thumbnails");
+                appLauncher.wallpaperFiles = appLauncher.wallpaperFiles.map(file => ({
+                    filePath: file.filePath,
+                    fileName: file.fileName,
+                    thumbnailPath: cachedNames.has(file.fileName) ? cacheDir + "/" + file.fileName + ".jpg" : file.filePath
+                }));
             }
         }
     }
@@ -285,7 +316,7 @@ Singleton {
             const q = query.toLowerCase();
             filtered = wallpaperFiles.filter(w => w.fileName.toLowerCase().includes(q));
         }
-        return filtered.slice(0, 50);
+        return filtered;
     }
 
     property string mode: "apps"
@@ -380,7 +411,7 @@ Singleton {
                     onTriggered: {
                         if (appLauncher.mode !== "wallpaper")
                             return;
-                        const files = appLauncher.wallpaperFiles;
+                        const files = appLauncher.searchResults;
                         const file = files[listView.currentIndex];
                         if (file) {
                             Config.wallpaperPath = "file://" + file.filePath;
@@ -548,7 +579,7 @@ Singleton {
 
                                 Image {
                                     visible: isWallpaperMode && modelData.filePath
-                                    source: modelData.filePath ? "file://" + modelData.filePath : ""
+                                    source: modelData.filePath ? "file://" + (modelData.thumbnailPath || modelData.filePath) : ""
                                     Layout.preferredWidth: 43
                                     Layout.preferredHeight: 24
                                     width: 43
