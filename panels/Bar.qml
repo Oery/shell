@@ -60,7 +60,7 @@ Scope {
                                 id: content
                                 anchors.centerIn: parent
                                 text: Distro.logo
-                                font.pixelSize: 14
+                                font.pixelSize: 22
                                 color: '#F7F1FF'
                             }
 
