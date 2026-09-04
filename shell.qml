@@ -15,6 +15,7 @@ import qs.system
 
 Scope {
     VolumeOSD {}
+    BrightnessOSD {}
 
     // Eagerly instantiate the notification service so its server registers
     // on DBus at startup (not lazily when the panel first opens).
