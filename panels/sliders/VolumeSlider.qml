@@ -23,7 +23,7 @@ RowLayout {
     StyledText {
         text: root.muted ? "󰖁" : (volumeSlider.value < 0.01 ? "󰕿" : (volumeSlider.value < 0.5 ? "󰖀" : "󰕾"))
         font.pixelSize: 17
-        color: root.muted ? '#F44336' : '#4CAF50'
+        color: root.muted ? '#666663' : '#E8E8E2'
         Layout.preferredWidth: 20
         horizontalAlignment: Text.AlignHCenter
 
@@ -41,7 +41,7 @@ RowLayout {
         to: 1
         stepSize: 0.01
         value: Pipewire.defaultAudioSink?.audio?.volume ?? 0.5
-        accent: root.muted ? '#666666' : '#4CAF50'
+        accent: root.muted ? '#666663' : '#E8E8E2'
         opacity: root.muted ? 0.5 : 1.0
 
         onMoved: {
@@ -56,7 +56,8 @@ RowLayout {
     StyledText {
         text: Math.round(volumeSlider.value * 100) + "%"
         font.pixelSize: 11
-        color: '#AAAAAA'
+        font.bold: true
+        color: '#858580'
         Layout.preferredWidth: 32
         horizontalAlignment: Text.AlignRight
     }

@@ -11,7 +11,7 @@ RowLayout {
     StyledText {
         text: brightnessSlider.value < 34 ? "󰃞" : (brightnessSlider.value < 67 ? "󰃟" : "󰃠")
         font.pixelSize: 17
-        color: '#FFC107'
+        color: '#E8E8E2'
         Layout.preferredWidth: 20
         horizontalAlignment: Text.AlignHCenter
     }
@@ -22,7 +22,7 @@ RowLayout {
         from: 1
         to: 100
         value: 50
-        accent: '#FFC107'
+        accent: '#E8E8E2'
 
         // Only react to user drags, not to the initial hardware read.
         onMoved: brightnessDebounce.restart()
@@ -31,7 +31,8 @@ RowLayout {
     StyledText {
         text: Math.round(brightnessSlider.value) + "%"
         font.pixelSize: 11
-        color: '#AAAAAA'
+        font.bold: true
+        color: '#858580'
         Layout.preferredWidth: 32
         horizontalAlignment: Text.AlignRight
     }

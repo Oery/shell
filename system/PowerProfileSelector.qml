@@ -13,25 +13,25 @@ ColumnLayout {
             value: PowerProfile.PowerSaver,
             label: "Saver",
             icon: "󰌪",
-            color: '#4CAF50'
+            color: '#E8E8E2'
         },
         {
             value: PowerProfile.Balanced,
             label: "Balanced",
             icon: "󰓅",
-            color: '#2196F3'
+            color: '#E8E8E2'
         },
         {
             value: PowerProfile.Performance,
             label: "Perf",
             icon: "󱐋",
-            color: '#F44336'
+            color: '#E8E8E2'
         }
     ]
 
     StyledText {
         text: "Power Profile"
-        font.pixelSize: 12
+        font.pixelSize: 11
         font.bold: true
         color: '#CFC9D9'
     }
@@ -51,10 +51,12 @@ ColumnLayout {
                 readonly property bool available: modelData.value !== PowerProfile.Performance || PowerProfiles.hasPerformanceProfile
 
                 Layout.fillWidth: true
-                implicitHeight: 40
+                implicitHeight: 42
                 radius: 10
                 opacity: available ? 1.0 : 0.4
-                color: selected ? modelData.color : (mouse.containsMouse ? '#24FFFFFF' : '#14FFFFFF')
+                color: selected ? '#28FFFFFF' : (mouse.containsMouse ? '#20FFFFFF' : '#12FFFFFF')
+                border.width: 1
+                border.color: selected ? modelData.color : 'transparent'
 
                 Behavior on color {
                     ColorAnimation {
@@ -64,20 +66,21 @@ ColumnLayout {
 
                 ColumnLayout {
                     anchors.centerIn: parent
-                    spacing: 1
+                    spacing: 2
 
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: seg.modelData.icon
                         font.pixelSize: 15
-                        color: seg.selected ? '#FFFFFF' : '#CFC9D9'
+                        color: seg.selected ? '#F7F1FF' : '#CFC9D9'
                     }
 
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: seg.modelData.label
                         font.pixelSize: 9
-                        color: seg.selected ? '#FFFFFF' : '#8A8497'
+                        font.bold: true
+                        color: seg.selected ? '#F7F1FF' : '#8A8497'
                     }
                 }
 

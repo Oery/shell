@@ -2,7 +2,7 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Hyprland
-import Quickshell.Widgets
+import Quickshell.Io
 import Quickshell.Services.Notifications
 import QtQuick
 import QtQuick.Layouts
@@ -15,10 +15,21 @@ Singleton {
     id: rightpanel
 
     property bool isVisible: false
-
-    // Monitor this panel opened on, captured at open time so it doesn't jump
-    // if focus moves elsewhere while it's up.
     property string activeScreen: ""
+    property string hostName: "localhost"
+
+    Process {
+        command: ["hostname"]
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const value = this.text.trim();
+                if (value.length > 0)
+                    rightpanel.hostName = value;
+            }
+        }
+    }
 
     function toggle() {
         if (!isVisible)
@@ -34,8 +45,6 @@ Singleton {
             required property var modelData
 
             screen: modelData
-            // Only the focused monitor's instance shows. Otherwise every
-            // monitor gets a copy, and their focus grabs cancel each other out.
             visible: rightpanel.isVisible && FocusedScreen.matches(modelData, rightpanel.activeScreen)
 
             anchors {
@@ -44,9 +53,8 @@ Singleton {
                 bottom: true
             }
 
-            implicitWidth: 360
-            color: 'transparent'
-
+            implicitWidth: 400
+            color: "transparent"
             exclusiveZone: 0
             focusable: true
 
@@ -57,11 +65,10 @@ Singleton {
             }
 
             Rectangle {
-                id: bg
-                color: '#E5080808'
                 anchors.fill: parent
                 anchors.margins: 5
                 radius: 10
+                color: "#E5080808"
 
                 focus: true
                 Keys.enabled: true
@@ -75,33 +82,54 @@ Singleton {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 16
-                    spacing: 16
+                    spacing: 14
 
-                    // Header
+                    // Mirrors the compact identity/status header of the Tailnet panel.
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: 11
 
                         StyledText {
                             text: "󰒓"
-                            font.pixelSize: 16
-                            color: '#F7F1FF'
+                            font.pixelSize: 19
+                            color: "#CFC9D9"
                         }
 
-                        StyledText {
-                            text: "Control Center"
-                            font.pixelSize: 14
-                            font.bold: true
+                        ColumnLayout {
+                            spacing: 0
+
+                            StyledText {
+                                text: rightpanel.hostName
+                                font.pixelSize: 14
+                                font.bold: true
+                            }
+
+                            StyledText {
+                                text: Notifications.count === 0 ? "System controls · all clear" : "System controls · " + Notifications.count + (Notifications.count === 1 ? " notification" : " notifications")
+                                font.pixelSize: 9
+                                color: "#8A8497"
+                            }
                         }
 
-                        Item {
-                            Layout.fillWidth: true
-                        }
+                        Item { Layout.fillWidth: true }
 
-                        StyledText {
-                            text: clock.date.toLocaleString(Qt.locale("en_EN"), "ddd HH:mm")
-                            font.pixelSize: 11
-                            color: '#8A8497'
+                        ColumnLayout {
+                            spacing: 0
+
+                            StyledText {
+                                Layout.alignment: Qt.AlignRight
+                                text: clock.date.toLocaleString(Qt.locale("en_EN"), "HH:mm")
+                                font.pixelSize: 13
+                                font.bold: true
+                                color: "#F7F1FF"
+                            }
+
+                            StyledText {
+                                Layout.alignment: Qt.AlignRight
+                                text: clock.date.toLocaleString(Qt.locale("en_EN"), "ddd dd MMM")
+                                font.pixelSize: 9
+                                color: "#8A8497"
+                            }
                         }
 
                         SystemClock {
@@ -110,47 +138,58 @@ Singleton {
                         }
                     }
 
-                    // Quick toggles
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: 1
+                        color: "#20FFFFFF"
+                    }
+
+                    // Compact quick controls, matching the Tailnet peer-card spacing.
                     GridLayout {
                         Layout.fillWidth: true
                         columns: 2
-                        columnSpacing: 10
-                        rowSpacing: 10
+                        columnSpacing: 8
+                        rowSpacing: 8
 
                         WifiToggle {}
                         BluetoothToggle {}
                     }
 
-                    // Sliders card
                     Rectangle {
                         Layout.fillWidth: true
-                        radius: 14
-                        color: '#0FFFFFFF'
-                        implicitHeight: slidersCol.implicitHeight + 28
+                        radius: 12
+                        color: "#12FFFFFF"
+                        implicitHeight: levelsColumn.implicitHeight + 24
 
                         ColumnLayout {
-                            id: slidersCol
+                            id: levelsColumn
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.leftMargin: 14
                             anchors.rightMargin: 14
-                            spacing: 14
+                            spacing: 10
+
+                            StyledText {
+                                text: "Levels"
+                                font.pixelSize: 11
+                                font.bold: true
+                                color: "#CFC9D9"
+                            }
 
                             BrightnessSlider {}
                             VolumeSlider {}
                         }
                     }
 
-                    // Power profile card
                     Rectangle {
                         Layout.fillWidth: true
-                        radius: 14
-                        color: '#0FFFFFFF'
-                        implicitHeight: powerCol.implicitHeight + 28
+                        radius: 12
+                        color: "#12FFFFFF"
+                        implicitHeight: powerProfile.implicitHeight + 24
 
                         PowerProfileSelector {
-                            id: powerCol
+                            id: powerProfile
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
@@ -159,7 +198,6 @@ Singleton {
                         }
                     }
 
-                    // Notifications
                     ColumnLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -173,30 +211,26 @@ Singleton {
                                 text: "Notifications"
                                 font.pixelSize: 12
                                 font.bold: true
-                                color: '#CFC9D9'
+                                color: "#CFC9D9"
                             }
 
                             StyledText {
                                 text: Notifications.count > 0 ? Notifications.count : ""
                                 font.pixelSize: 10
-                                color: '#8A8497'
+                                color: "#8A8497"
                             }
 
-                            Item {
-                                Layout.fillWidth: true
-                            }
+                            Item { Layout.fillWidth: true }
 
                             Rectangle {
                                 visible: Notifications.count > 0
                                 implicitWidth: clearLabel.implicitWidth + 18
                                 implicitHeight: 22
                                 radius: 6
-                                color: clearMouse.containsMouse ? '#24FFFFFF' : '#14FFFFFF'
+                                color: clearMouse.containsMouse ? "#24FFFFFF" : "#14FFFFFF"
 
                                 Behavior on color {
-                                    ColorAnimation {
-                                        duration: 120
-                                    }
+                                    ColorAnimation { duration: 120 }
                                 }
 
                                 StyledText {
@@ -204,7 +238,7 @@ Singleton {
                                     anchors.centerIn: parent
                                     text: "Clear all"
                                     font.pixelSize: 10
-                                    color: '#CFC9D9'
+                                    color: "#CFC9D9"
                                 }
 
                                 MouseArea {
@@ -217,7 +251,6 @@ Singleton {
                             }
                         }
 
-                        // Empty state
                         Item {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -231,14 +264,14 @@ Singleton {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "󰂚"
                                     font.pixelSize: 26
-                                    color: '#3A3A44'
+                                    color: "#3A3A44"
                                 }
 
                                 StyledText {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: "No notifications"
                                     font.pixelSize: 11
-                                    color: '#6A6475'
+                                    color: "#6A6475"
                                 }
                             }
                         }
@@ -253,44 +286,20 @@ Singleton {
                             boundsBehavior: Flickable.StopAtBounds
 
                             delegate: Rectangle {
-                                id: notifCard
+                                id: notificationCard
                                 required property var modelData
 
                                 width: ListView.view.width
-                                implicitHeight: ncontent.implicitHeight + 20
-                                radius: 10
-                                color: cardMouse.containsMouse ? '#1CFFFFFF' : '#12FFFFFF'
+                                implicitHeight: notificationContent.implicitHeight + 20
+                                radius: 12
+                                color: notificationMouse.containsMouse ? "#1CFFFFFF" : "#12FFFFFF"
+
+                                readonly property color urgencyColor: modelData.urgency === NotificationUrgency.Critical ? "#F44336" : "#6A6475"
 
                                 Behavior on color {
-                                    ColorAnimation {
-                                        duration: 120
-                                    }
+                                    ColorAnimation { duration: 120 }
                                 }
 
-                                readonly property color urgencyColor: {
-                                    if (modelData.urgency === NotificationUrgency.Critical)
-                                        return '#F44336';
-                                    if (modelData.urgency === NotificationUrgency.Low)
-                                        return '#4A4A55';
-                                    return '#2196F3';
-                                }
-
-                                readonly property string iconSource: {
-                                    if (modelData.image && modelData.image.length > 0)
-                                        return modelData.image.startsWith("/") ? "file://" + modelData.image : modelData.image;
-                                    if (modelData.appIcon && modelData.appIcon.length > 0)
-                                        return Quickshell.iconPath(modelData.appIcon, true);
-                                    return "";
-                                }
-
-                                MouseArea {
-                                    id: cardMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    acceptedButtons: Qt.NoButton
-                                }
-
-                                // Urgency accent stripe
                                 Rectangle {
                                     anchors.left: parent.left
                                     anchors.top: parent.top
@@ -298,40 +307,54 @@ Singleton {
                                     anchors.margins: 8
                                     width: 3
                                     radius: 2
-                                    color: notifCard.urgencyColor
+                                    color: notificationCard.urgencyColor
+                                }
+
+                                MouseArea {
+                                    id: notificationMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    acceptedButtons: Qt.NoButton
                                 }
 
                                 RowLayout {
-                                    id: ncontent
+                                    id: notificationContent
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    anchors.leftMargin: 18
-                                    anchors.rightMargin: 10
-                                    spacing: 10
+                                    anchors.leftMargin: 16
+                                    anchors.rightMargin: 12
+                                    spacing: 11
 
-                                    IconImage {
-                                        visible: notifCard.iconSource.length > 0 && status !== Image.Error
-                                        source: notifCard.iconSource
-                                        Layout.preferredWidth: 26
-                                        Layout.preferredHeight: 26
+                                    Rectangle {
                                         Layout.alignment: Qt.AlignTop
-                                        asynchronous: true
+                                        Layout.preferredWidth: 38
+                                        Layout.preferredHeight: 38
+                                        radius: 10
+                                        color: "#16FFFFFF"
+
+                                        StyledText {
+                                            anchors.centerIn: parent
+                                            text: (notificationCard.modelData.appName || "N").charAt(0).toUpperCase()
+                                            font.pixelSize: 15
+                                            font.bold: true
+                                            color: "#CFC9D9"
+                                        }
                                     }
 
                                     ColumnLayout {
                                         Layout.fillWidth: true
-                                        spacing: 2
+                                        spacing: 3
 
                                         RowLayout {
                                             Layout.fillWidth: true
                                             spacing: 6
 
                                             StyledText {
-                                                text: notifCard.modelData.appName || "Notification"
+                                                text: notificationCard.modelData.appName || "Notification"
                                                 font.pixelSize: 9
                                                 font.bold: true
-                                                color: '#8A8497'
+                                                color: "#8A8497"
                                                 Layout.fillWidth: true
                                                 elide: Text.ElideRight
                                             }
@@ -339,7 +362,7 @@ Singleton {
                                             StyledText {
                                                 text: "✕"
                                                 font.pixelSize: 11
-                                                color: dismissMouse.containsMouse ? '#F44336' : '#6A6475'
+                                                color: dismissMouse.containsMouse ? "#F7F1FF" : "#6A6475"
 
                                                 MouseArea {
                                                     id: dismissMouse
@@ -347,16 +370,16 @@ Singleton {
                                                     anchors.margins: -6
                                                     hoverEnabled: true
                                                     cursorShape: Qt.PointingHandCursor
-                                                    onClicked: Notifications.dismiss(notifCard.modelData)
+                                                    onClicked: Notifications.dismiss(notificationCard.modelData)
                                                 }
                                             }
                                         }
 
                                         StyledText {
-                                            text: notifCard.modelData.summary || ""
+                                            text: notificationCard.modelData.summary || ""
                                             font.pixelSize: 12
                                             font.bold: true
-                                            color: '#F7F1FF'
+                                            color: "#F7F1FF"
                                             Layout.fillWidth: true
                                             wrapMode: Text.Wrap
                                             maximumLineCount: 2
@@ -365,9 +388,9 @@ Singleton {
                                         }
 
                                         StyledText {
-                                            text: notifCard.modelData.body || ""
+                                            text: notificationCard.modelData.body || ""
                                             font.pixelSize: 10
-                                            color: '#B0AABB'
+                                            color: "#B0AABB"
                                             Layout.fillWidth: true
                                             wrapMode: Text.Wrap
                                             maximumLineCount: 4

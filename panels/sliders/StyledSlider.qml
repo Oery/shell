@@ -1,11 +1,11 @@
 import QtQuick
 import QtQuick.Controls
 
-// Dark-themed slider matching the rest of the shell.
+// Soft level control matching the translucent side-panel cards.
 Slider {
     id: control
 
-    property color accent: '#F7F1FF'
+    property color accent: '#E8E8E2'
 
     implicitHeight: 20
 

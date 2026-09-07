@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.utils
 
-// A quick-settings toggle tile: icon + label + status, tinted when active.
+// Compact quick-setting in the same soft-card language as the side panels.
 Rectangle {
     id: tile
 
@@ -10,14 +10,16 @@ Rectangle {
     property string label: ""
     property string sublabel: ""
     property bool active: false
-    property color accent: '#2196F3'
+    property color accent: '#E8E8E2'
 
     signal toggled
 
     Layout.fillWidth: true
-    implicitHeight: 58
+    implicitHeight: 50
     radius: 12
-    color: active ? accent : (mouse.containsMouse ? '#24FFFFFF' : '#14FFFFFF')
+    color: mouse.containsMouse ? '#1CFFFFFF' : '#12FFFFFF'
+    border.width: 1
+    border.color: active ? accent : '#18FFFFFF'
 
     Behavior on color {
         ColorAnimation {
@@ -27,14 +29,18 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 14
-        anchors.rightMargin: 12
-        spacing: 11
+        anchors.leftMargin: 11
+        anchors.rightMargin: 10
+        spacing: 9
 
         StyledText {
             text: tile.icon
-            font.pixelSize: 19
-            color: tile.active ? '#FFFFFF' : '#CFC9D9'
+            font.pixelSize: 16
+            color: tile.active ? tile.accent : '#8A8497'
+            Layout.preferredWidth: 20
+            Layout.minimumWidth: 20
+            Layout.maximumWidth: 20
+            horizontalAlignment: Text.AlignHCenter
         }
 
         ColumnLayout {
@@ -43,17 +49,19 @@ Rectangle {
 
             StyledText {
                 text: tile.label
-                font.pixelSize: 12
+                font.pixelSize: 11
                 font.bold: true
-                color: tile.active ? '#FFFFFF' : '#F7F1FF'
+                font.letterSpacing: 0.3
+                color: '#F7F1FF'
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
 
             StyledText {
                 text: tile.sublabel
-                font.pixelSize: 9
-                color: tile.active ? '#DCFFFFFF' : '#8A8497'
+                font.pixelSize: 8
+                font.letterSpacing: 0.7
+                color: '#8A8497'
                 Layout.fillWidth: true
                 elide: Text.ElideRight
                 visible: text.length > 0

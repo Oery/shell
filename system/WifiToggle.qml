@@ -8,9 +8,9 @@ ToggleTile {
 
     icon: wifiEnabled ? "󰤨" : "󰤭"
     label: "Wi-Fi"
-    sublabel: wifiEnabled ? "Connected" : "Off"
+    sublabel: wifiEnabled ? "ONLINE" : "OFFLINE"
     active: wifiEnabled
-    accent: '#2196F3'
+    accent: '#E8E8E2'
 
     onToggled: wifiToggle.running = true
 

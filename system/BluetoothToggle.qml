@@ -8,9 +8,9 @@ ToggleTile {
 
     icon: bluetoothEnabled ? "󰂯" : "󰂲"
     label: "Bluetooth"
-    sublabel: bluetoothEnabled ? "On" : "Off"
+    sublabel: bluetoothEnabled ? "ENABLED" : "DISABLED"
     active: bluetoothEnabled
-    accent: '#3F51B5'
+    accent: '#E8E8E2'
 
     onToggled: bluetoothToggle.running = true
 
