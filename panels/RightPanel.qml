@@ -71,7 +71,7 @@ Singleton {
                 anchors.fill: parent
                 anchors.margins: 5
                 radius: 10
-                color: "#E5080808"
+                color: Theme.panelBackground
 
                 focus: true
                 Keys.enabled: true

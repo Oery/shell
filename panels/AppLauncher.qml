@@ -391,8 +391,7 @@ Singleton {
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 5
-                // color: '#E5080808'
-                color: '#D8080808'
+                color: Theme.panelBackground
                 radius: 4
 
                 opacity: 0

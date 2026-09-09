@@ -32,8 +32,7 @@ Scope {
             }
 
             Rectangle {
-                color: '#d8080808' // 85%
-                // color: '#f2080808'
+                color: Theme.panelBackground
 
                 anchors.fill: parent
 
