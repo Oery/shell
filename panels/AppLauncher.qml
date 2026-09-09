@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import Quickshell.Widgets
 import Quickshell.Io
 import QtQuick.Layouts
@@ -350,6 +351,8 @@ Singleton {
         PanelWindow {
             id: launcher
             required property var modelData
+
+            WlrLayershell.namespace: "quickshell-launcher"
 
             screen: modelData
             // Only the focused monitor's instance shows. Otherwise every

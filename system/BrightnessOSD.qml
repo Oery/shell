@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 
 Scope {
 	id: root
@@ -67,6 +68,8 @@ Scope {
 		active: root.shouldShowOsd
 
 		PanelWindow {
+			WlrLayershell.namespace: "quickshell-osd"
+
 			anchors.bottom: true
 			margins.bottom: screen.height / 10
 			exclusiveZone: 0

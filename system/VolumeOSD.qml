@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.Pipewire
+import Quickshell.Wayland
 import Quickshell.Widgets
 
 Scope {
@@ -52,6 +53,8 @@ Scope {
 		active: root.shouldShowOsd
 
 		PanelWindow {
+			WlrLayershell.namespace: "quickshell-osd"
+
 			// Since the panel's screen is unset, it will be picked by the compositor
 			// when the window is created. Most compositors pick the current active monitor.
 

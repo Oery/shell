@@ -2,6 +2,7 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import qs.utils
@@ -93,6 +94,8 @@ Singleton {
         PanelWindow {
             id: sidePanel
             required property var modelData
+
+            WlrLayershell.namespace: "quickshell-panel"
 
             screen: modelData
             // Only the focused monitor's instance shows. Otherwise every

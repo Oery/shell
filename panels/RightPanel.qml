@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.Notifications
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import qs.utils
@@ -43,6 +44,8 @@ Singleton {
         PanelWindow {
             id: rightPanel
             required property var modelData
+
+            WlrLayershell.namespace: "quickshell-panel"
 
             screen: modelData
             visible: rightpanel.isVisible && FocusedScreen.matches(modelData, rightpanel.activeScreen)
